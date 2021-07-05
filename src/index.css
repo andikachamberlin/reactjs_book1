@@ -1,0 +1,38 @@
+@font-face {
+    font-family: "Quicksand-Regular";
+    src: local("Quicksand-Regular"),
+        url("./assets/fonts/Quicksand/static/Quicksand-Regular.ttf") format("truetype");
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Quicksand-Medium";
+    src: local("Quicksand-Medium"),
+        url("./assets/fonts/Quicksand/static/Quicksand-Medium.ttf") format("truetype");
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: "Quicksand-SemiBold";
+    src: local("Quicksand-SemiBold"),
+        url("./assets/fonts/Quicksand/static/Quicksand-SemiBold.ttf") format("truetype");
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: "Quicksand-Bold";
+    src: local("Quicksand-Bold"),
+        url("./assets/fonts/Quicksand/static/Quicksand-Bold.ttf") format("truetype");
+    font-weight: 900;
+}
+
+body {
+    margin: 0;
+    font-family: 'Quicksand-Medium', 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
