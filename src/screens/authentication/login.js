@@ -75,7 +75,7 @@ const Screen = ({loading, error, setting}) => {
     ----------------------------------------------------------------*/
     const [username, set_username] = useState('');
     const [password, set_password] = useState('');
-    const [refresh, set_refresh] = useState(false);
+    const [refresh, set_refresh] = useState('');
     /*--------------------------------------------------------------
     [End State]
     ----------------------------------------------------------------*/
@@ -103,17 +103,15 @@ const Screen = ({loading, error, setting}) => {
 
 		loading(true);
 
-        set_refresh(random_character(16))
-
-		API_LOGIN('login__________', {
+		API_LOGIN('login', {
 			username: username,
 			password: password
 		})
         .then((response) => {
+            console.log('response : ', response.data)
 			if(response.data.result === 'success'){
-                reactLocalStorage.set('@token', response.data.data);
-                reactLocalStorage.set('@user', JSON.stringify(response.data.user));
-                set_user(JSON.stringify(response.data.user))
+                reactLocalStorage.set('@token', response.data.data.token);
+                reactLocalStorage.set('@user', JSON.stringify(response.data.data.user));
                 window.location.reload();
             }else if(response.data.error){
                 error(response.data.error)
@@ -131,59 +129,12 @@ const Screen = ({loading, error, setting}) => {
     [End API]
     ----------------------------------------------------------------*/
 
-	/*--------------------------------------------------------------
-	[Browser]
-	----------------------------------------------------------------*/
-	const _browser = () => {
-
-        // Opera 8.0+
-        var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
-
-        // Firefox 1.0+
-        var isFirefox = typeof InstallTrigger !== 'undefined';
-
-        // Safari 3.0+ "[object HTMLElementConstructor]" 
-        var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
-
-        // Internet Explorer 6-11
-        var isIE = /*@cc_on!@*/false || !!document.documentMode;
-
-        // Edge 20+
-        var isEdge = !isIE && !!window.StyleMedia;
-
-        // Chrome 1 - 71
-        var isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
-
-        // Blink engine detection
-        var isBlink = (isChrome || isOpera) && !!window.CSS;
-
-        if(isFirefox){
-            error('Detect Firefox : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isChrome){
-
-        }else if(isSafari){
-            error('Detect Safari : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isOpera){
-            error('Detect Opera : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isIE){
-            error('Detect IE : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isEdge){
-            error('Detect Edge : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isBlink){
-            error('Detect Blink : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }
-
-	}
-	/*--------------------------------------------------------------
-	[End Browser]
-	----------------------------------------------------------------*/
-
     /*--------------------------------------------------------------
     [useEffect]
     ----------------------------------------------------------------*/
     useEffect(() => {
 
-		_browser();
+
 
     }, [refresh])
     /*--------------------------------------------------------------
@@ -196,10 +147,7 @@ const Screen = ({loading, error, setting}) => {
     return (
         <>
             <Helmet>
-
-                <meta name="description" content={'Login'}/>
                 <title>{'Login'}</title>
-
             </Helmet>
 
             <div className="_container_small">
@@ -210,7 +158,7 @@ const Screen = ({loading, error, setting}) => {
                     <div className="_row _center_align">
                         <div className="_push_r_m">
                             <div className="_icon_d">
-                                <ion-icon name="finger-print-outline"></ion-icon>
+                                <ion-icon name="footsteps-outline"></ion-icon>
                             </div>
                         </div>
                         <div className="_column">
@@ -224,13 +172,22 @@ const Screen = ({loading, error, setting}) => {
                     </div>
                 </div>
                 <div className="_push_b_d">
-                    <input
-                        className="_input" 
-                        placeholder="Password"  
-                        type="password"
-                        onChange={e => set_password(e.target.value)}
-                        value={password} 
-                    />
+                    <div className="_row _center_align">
+                        <div className="_push_r_m">
+                            <div className="_icon_d">
+                                <ion-icon name="lock-closed-outline"></ion-icon>
+                            </div>
+                        </div>
+                        <div className="_column">
+                            <input
+                                className="_input" 
+                                placeholder="Password"  
+                                type="password"
+                                onChange={e => set_password(e.target.value)}
+                                value={password} 
+                            />
+                        </div>
+                    </div>
                 </div>
                 <div className="_push_b_d">
                     <button 

@@ -160,6 +160,26 @@ const App = () => {
 	return (
 		<>
 			<Router>
+
+				{
+					error && error.length > 0 &&
+					<div className="_error">
+						<div className="_container">
+							<div className="_row _center_align">
+								<div className="_column">
+									{error}
+								</div>
+								<div className="_push_l_m">
+									<div onClick={() => {
+										set_error('')
+									}} className="_icon_d">
+										<ion-icon name="close-outline"></ion-icon>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				}
 				
 				<Switch>
 					
