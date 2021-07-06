@@ -165,22 +165,18 @@ export const API_POST = (url, body) => {
 
 }
 
-export const API_LOGOUT = (url) => {
+export const API_LOGOUT = (url, body) => {
 
     let key_parse = JSON.parse(STORAGE_USER)
 
-    let body;
+    let form_data = {
+        sct: API_SCT, 
+        key: key_parse[0].id_key
+    };
 
-    if(key_parse){
-        
-        body = {
-            sct : API_SCT,
-            key : key_parse[0].id_key
-        }
-        
-    }
+    form_data = {...form_data, ...body};
 
-    if(body){
+    if(form_data){
 
         return new Promise(async (resolve, reject) => {
     
@@ -195,7 +191,7 @@ export const API_LOGOUT = (url) => {
                         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
                         "Authorization": "Bearer " + STORAGE_TOKEN,
                     },
-                    data: qs.stringify(body)
+                    data: qs.stringify(form_data)
                 }).then((response) => {
                     resolve(response)
                 }).catch((error) => {

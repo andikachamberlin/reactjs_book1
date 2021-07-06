@@ -41,7 +41,7 @@ Author URI       : flamecore.cloud
 
 body{
     color: #444;
-    font-size: 13.5px;
+    font-size: 13px;
     overflow-x: hidden;
 }
 
@@ -114,7 +114,7 @@ th,
 td{
     border: 1px solid #eee;
     text-align: left;
-    padding-right: 8px;
+    padding: 8px 12px;
 }
 td:last-child{
     padding-right: 0;
@@ -664,14 +664,32 @@ End Column
 -------------------------------------------------------------------*/
 ._loading{
     position: fixed;
-    top: 20px;
-    margin: auto;
-    text-align: center;
+    bottom: 20px;
+    left: 20px;
     background-color: #222;
     color: #fff;
-    padding: 8px 16px;
-    border-radius: 8px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    z-index: 1000;
 }
 /*------------------------------------------------------------------
 [End Error]
+-------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------
+[Overflow]
+-------------------------------------------------------------------*/
+._overflow_x{
+    overflow-x: auto;
+}
+
+._overflow_y{
+    overflow-y: auto;
+}
+
+._overflow_hidden{
+    overflow: hidden
+}
+/*------------------------------------------------------------------
+[End Overflow]
 -------------------------------------------------------------------*/
