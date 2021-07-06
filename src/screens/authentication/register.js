@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------
 [React]
 -------------------------------------------------------------------*/
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 /*------------------------------------------------------------------
 [End React]
 -------------------------------------------------------------------*/
@@ -17,7 +17,7 @@ import {Helmet} from "react-helmet";
 /*------------------------------------------------------------------
 [API]
 -------------------------------------------------------------------*/
-import { API_GET_PUBLIC, API_SERVER, API_LOGIN, API_UPLOADS } from '../../api';
+import { API_AUTH } from '../../api';
 /*------------------------------------------------------------------
 [End API]
 -------------------------------------------------------------------*/
@@ -38,15 +38,7 @@ import {reactLocalStorage} from 'reactjs-localstorage';
 [End Module]
 -------------------------------------------------------------------*/
 
-/*------------------------------------------------------------------
-[Functions]
--------------------------------------------------------------------*/
-import { random_character } from "../../functions";
-/*------------------------------------------------------------------
-[End Functions]
--------------------------------------------------------------------*/
-
-const Screen = ({loading, error, setting}) => {
+const Screen = ({loading, error}) => {
 
     /*--------------------------------------------------------------
     [History]
@@ -73,9 +65,9 @@ const Screen = ({loading, error, setting}) => {
     /*--------------------------------------------------------------
     [State]
     ----------------------------------------------------------------*/
+    const [name, set_name] = useState('');
     const [username, set_username] = useState('');
     const [password, set_password] = useState('');
-    const [refresh, set_refresh] = useState(false);
     /*--------------------------------------------------------------
     [End State]
     ----------------------------------------------------------------*/
@@ -95,7 +87,7 @@ const Screen = ({loading, error, setting}) => {
     /*--------------------------------------------------------------
     [API]
     ----------------------------------------------------------------*/
-    const _login = () => {
+    const _register = () => {
 
         if(loading === true){
             return
@@ -103,18 +95,16 @@ const Screen = ({loading, error, setting}) => {
 
 		loading(true);
 
-        set_refresh(random_character(16))
-
-		API_LOGIN('login__________', {
+		API_AUTH('register', {
+            action: 'register',
+            name: name,
 			username: username,
 			password: password
 		})
         .then((response) => {
+            console.log('response : ', response.data)
 			if(response.data.result === 'success'){
-                reactLocalStorage.set('@token', response.data.data);
-                reactLocalStorage.set('@user', JSON.stringify(response.data.user));
-                set_user(JSON.stringify(response.data.user))
-                window.location.reload();
+                error('Berhasil Mendaftar')
             }else if(response.data.error){
                 error(response.data.error)
             }
@@ -131,88 +121,89 @@ const Screen = ({loading, error, setting}) => {
     [End API]
     ----------------------------------------------------------------*/
 
-	/*--------------------------------------------------------------
-	[Browser]
-	----------------------------------------------------------------*/
-	const _browser = () => {
-
-        // Opera 8.0+
-        var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
-
-        // Firefox 1.0+
-        var isFirefox = typeof InstallTrigger !== 'undefined';
-
-        // Safari 3.0+ "[object HTMLElementConstructor]" 
-        var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
-
-        // Internet Explorer 6-11
-        var isIE = /*@cc_on!@*/false || !!document.documentMode;
-
-        // Edge 20+
-        var isEdge = !isIE && !!window.StyleMedia;
-
-        // Chrome 1 - 71
-        var isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
-
-        // Blink engine detection
-        var isBlink = (isChrome || isOpera) && !!window.CSS;
-
-        if(isFirefox){
-            error('Detect Firefox : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isChrome){
-
-        }else if(isSafari){
-            error('Detect Safari : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isOpera){
-            error('Detect Opera : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isIE){
-            error('Detect IE : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isEdge){
-            error('Detect Edge : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }else if(isBlink){
-            error('Detect Blink : Direkomendasikan menggunakan browser Google Chrome demi mendapatakan pengalaman terbaik')
-        }
-
-	}
-	/*--------------------------------------------------------------
-	[End Browser]
-	----------------------------------------------------------------*/
-
-    /*--------------------------------------------------------------
-    [useEffect]
-    ----------------------------------------------------------------*/
-    useEffect(() => {
-
-		_browser();
-
-    }, [refresh])
-    /*--------------------------------------------------------------
-    [useEffect]
-    ----------------------------------------------------------------*/
-
     /*--------------------------------------------------------------
     [Render]
     ----------------------------------------------------------------*/
     return (
         <>
             <Helmet>
-
-                <meta name="description" content={'Login'}/>
-                <title>{'Login'}</title>
-
+                <title>{'Register'}</title>
             </Helmet>
 
-
-            <input 
-                placeholder="" 
-                onChange={e => set_username(e.target.value)}
-                value={username}
-            />
-            <input 
-                type="password"
-                onChange={e => set_password(e.target.value)}
-                value={password} 
-            />
+            <div className="_container_small">
+                <div className="_push_b_d _push_t_g">
+                    <h1>Register</h1>
+                </div>
+                <div className="_push_b_d">
+                    <div className="_row _center_align">
+                        <div className="_push_r_m">
+                            <div className="_icon_d">
+                                <ion-icon name="happy-outline"></ion-icon>
+                            </div>
+                        </div>
+                        <div className="_column">
+                            <input
+                                className="_input" 
+                                placeholder="Name" 
+                                onChange={e => set_name(e.target.value)}
+                                value={name}
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div className="_push_b_d">
+                    <div className="_row _center_align">
+                        <div className="_push_r_m">
+                            <div className="_icon_d">
+                                <ion-icon name="footsteps-outline"></ion-icon>
+                            </div>
+                        </div>
+                        <div className="_column">
+                            <input
+                                className="_input" 
+                                placeholder="Username" 
+                                onChange={e => set_username(e.target.value)}
+                                value={username}
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div className="_push_b_d">
+                    <div className="_row _center_align">
+                        <div className="_push_r_m">
+                            <div className="_icon_d">
+                                <ion-icon name="lock-closed-outline"></ion-icon>
+                            </div>
+                        </div>
+                        <div className="_column">
+                            <input
+                                className="_input" 
+                                placeholder="Password"  
+                                type="password"
+                                onChange={e => set_password(e.target.value)}
+                                value={password} 
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div className="_push_b_d">
+                    <button 
+                        className="_btn" 
+                        onClick={() => {
+                            _register()
+                        }}
+                    >
+                        Sign Up
+                    </button>
+                </div>
+                <NavLink 
+                    to={{
+                        pathname: "/login",
+                    }}
+                >
+                    Sudah Punya Akun? Silahkan <strong>Login</strong>
+                </NavLink>
+            </div>
         </>
     );
     /*--------------------------------------------------------------

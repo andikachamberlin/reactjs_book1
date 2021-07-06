@@ -76,64 +76,16 @@ const App = () => {
 	/*--------------------------------------------------------------
 	[State]
 	----------------------------------------------------------------*/
-	const [refresh, set_refresh] = useState('');
 	const [loading, set_loading] = useState(false);
 	const [error, set_error] = useState('');
 	const [progress, set_progress] = useState('');
-
-	const [setting, set_setting] = useState('');
-	const [home, set_home] = useState('');
 	/*--------------------------------------------------------------
 	[End State]
 	----------------------------------------------------------------*/
 
-	const _home = () => {
-
-		set_loading(true);
-
-		API_GET_PUBLIC('client/home__________')
-        .then((response) => {
-			if(response.data.result === 'success'){
-				// console.log('home : ', response.data)
-                set_home(response.data.data)
-            }else if(response.data.error){
-                set_error(response.data.error)
-            }
-        })
-        .catch((e) => {
-			console.log('catch : ', e)
-            set_error(e.message)
-        }).finally(() => {
-			set_loading(false)
-		})
-
-    }
 	/*--------------------------------------------------------------
-	[End API]
+	[Progress Upload]
 	----------------------------------------------------------------*/
-
-	/*--------------------------------------------------------------
-	[Error]
-	----------------------------------------------------------------*/
-	const _error = (errorParams) => {
-
-		if(errorParams){
-			
-			if(errorParams.length > 0){
-				setTimeout(() => {
-					set_error('')
-				}, 7000);
-			}
-
-		}
-
-	}
-
-	_error(error);
-	/*--------------------------------------------------------------
-	[End Error]
-	----------------------------------------------------------------*/
-
 	const _progress_finish = () => {
 
 		setTimeout(() => {
@@ -141,17 +93,8 @@ const App = () => {
 		}, 1500)
 
 	}
-
 	/*--------------------------------------------------------------
-	[useEffect]
-	----------------------------------------------------------------*/
-    useEffect(() => {
-
-		_error();
-
-    }, [refresh])
-	/*--------------------------------------------------------------
-	[End UseEffect]
+	[End Progress Upload]
 	----------------------------------------------------------------*/
 
 	/*--------------------------------------------------------------
@@ -159,27 +102,60 @@ const App = () => {
 	----------------------------------------------------------------*/
 	return (
 		<>
-			<Router>
 
-				{
-					error && error.length > 0 &&
-					<div className="_error">
-						<div className="_container">
-							<div className="_row _center_align">
-								<div className="_column">
-									{error}
-								</div>
-								<div className="_push_l_m">
-									<div onClick={() => {
-										set_error('')
-									}} className="_icon_d">
-										<ion-icon name="close-outline"></ion-icon>
-									</div>
+			{
+				error && error.length > 0 &&
+				<div className="_error">
+					<div className="_container">
+						<div className="_row _center_align">
+							<div className="_column">
+								{error}
+							</div>
+							<div className="_push_l_m">
+								<div onClick={() => {
+									set_error('')
+								}} className="_icon_d">
+									<ion-icon name="close-outline"></ion-icon>
 								</div>
 							</div>
 						</div>
 					</div>
-				}
+				</div>
+			}
+
+			{		
+				loading &&
+				
+				<div className="_loading">
+					Loading...
+				</div>
+			
+			}
+
+			{
+				progress > 0 ?
+				
+					<div className="_progressbar">
+						<div class="_loader"></div>
+						<h1 style={{marginBottom: 20}}><span style={{color: '#118ab2'}}>e-</span>Progress</h1>
+						<div className="_item">
+							<div className="_item_progress" style={{width: `${progress}%`}}>
+								<div className="_percent">{`${progress}%`}</div>
+							</div>
+						</div>
+						{
+							progress === 100 ?
+								_progress_finish()
+							: 
+								<p className="_push_t_l">Uploading Files . . .</p>
+						}
+					</div>
+
+				: null
+			
+			}
+
+			<Router>
 				
 				<Switch>
 					
