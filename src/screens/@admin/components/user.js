@@ -17,7 +17,7 @@ import {Helmet} from "react-helmet";
 /*------------------------------------------------------------------
 [API]
 -------------------------------------------------------------------*/
-import { API_GET_REQUEST, API_SERVER, API_SCT } from '../../../api';
+import { API_GET_REQUEST, API_SERVER, API_SCT, API_URL } from '../../../api';
 /*------------------------------------------------------------------
 [End API]
 -------------------------------------------------------------------*/
@@ -66,6 +66,10 @@ const Screen = ({loading, error, progress}) => {
     const [pagination_active, set_pagination_active] = useState(1);
     const [data, set_data] = useState(null);
     const [search, set_search] = useState('');
+
+    const [name, set_name] = useState('');
+    const [price, set_price] = useState('');
+    const [category, set_category] = useState('');
     /*--------------------------------------------------------------
     [End State]
     ----------------------------------------------------------------*/
@@ -78,24 +82,24 @@ const Screen = ({loading, error, progress}) => {
 		let offsetSync;
 
         if(pages === 1){
-            
             offsetSync = 0;    
-        
         }else{
-
             offsetSync = pages ? (20 * pages) - 20 : 0
-        
+        }
+
+        if(loading === true){
+            return
         }
         
         loading(true);
 
-        API_GET_REQUEST('source__________?action=read'
+        API_GET_REQUEST('user/get?action=read'
             + '&limit=20'
             + '&offset=' + offsetSync
-        , 
+            , 
 		).then((response) => {
+            console.log('response : ', response)
             if(response.data.result == 'success'){
-                console.log(JSON.stringify(response.data.data, undefined, 2))
                 set_data(response.data.data)
 			}else if(response.data.error){
 				error(response.data.error);
@@ -110,39 +114,15 @@ const Screen = ({loading, error, progress}) => {
 
 	}
 
-    const _delete = (id) => {
+    const _search = () => {
 
-		if(loading === true){
+        if(loading === true){
             return
         }
-
-        loading(true);
-
-        API_GET_REQUEST('web__________?action=delete_gallery'
-            + '&id=' + id
-        , 
-		).then((response) => {
-            if(response.data.result == 'success'){
-                console.log(JSON.stringify(response.data.data, undefined, 2))
-                set_refresh(random_character(16))
-			}else if(response.data.error){
-				error(response.data.error);
-			}
-		})
-		.catch((e) => {
-            console.log('catch : ', e)
-            error(e.message)
-        }).finally(() => {
-            loading(false)
-        })
-
-	}
-
-    const _search = () => {
         
         if(search.length > 3){
     
-            API_GET_REQUEST('source__________?action=search'
+            API_GET_REQUEST('user/get?action=search'
                 + '&search=' + search
             , 
             ).then((response) => {
@@ -166,11 +146,25 @@ const Screen = ({loading, error, progress}) => {
 
     }
 
-    const _uploads = () => {
+    const _request = (action, id) => {
 
-        if(file === null){
-            return error('Tidak ada file')
+        let action_sync = action;
+
+        if(action_sync == 'insert'){
+            action_sync = 'insert'
+        }else if(action_sync == 'update'){
+            if(file !== null){
+                action_sync = 'update_file'
+            }else{
+                action_sync = 'update_text'
+            }
+        }else if(action_sync == 'delete'){
+            action_sync = 'delete'
+        }else{
+            action_sync = null
         }
+
+        console.log('action sync : ', action_sync)
 
         if(loading === true){
             return
@@ -181,30 +175,44 @@ const Screen = ({loading, error, progress}) => {
         var data = new FormData();
         data.append("sct", API_SCT);
         data.append("key", STORAGE_USER[0].id_key);
+        data.append("action", action_sync);
+        data.append("id_product", id);
+        data.append("name", name);
+        data.append("price", price);
+        data.append("category", category);
 
-        file.map((item) => (
-            data.append("file", item)
-        ))
+
+        if(file !== null){
+            file.map((item) => (
+                data.append("file", item)
+            ))
+        }
 
         var config = {
             method: 'post',
-            url: API_SERVER + "/api/v1.0/source/insert__________",
+            url: API_URL + "product/post",
             headers: { 
                 'Authorization': `Bearer ${STORAGE_TOKEN}`,
             },
             data : data,
             onUploadProgress: progressEvent => {
-                console.log('loaded : ', progressEvent.loaded)
-                console.log('total : ', progressEvent.total)
-                progress(parseInt(Math.round((progressEvent.loaded/progressEvent.total) * 100)))
+                if(file !== null){
+                    console.log('loaded : ', progressEvent.loaded)
+                    console.log('total : ', progressEvent.total)
+                    progress(parseInt(Math.round((progressEvent.loaded/progressEvent.total) * 100)))
+                }
             }
         };
 
         axios(config)
         .then((response) => {
+            console.log('response : ', response.data);
             if(response.data.result === 'success'){
-                console.log('results : ', JSON.stringify(response.data));
                 set_file(null)
+                set_element(null)
+                set_name('')
+                set_price('')
+                set_category('')
                 set_refresh(random_character(16))
                 error(response.data.title)
             }else if(response.data.error){
@@ -230,16 +238,16 @@ const Screen = ({loading, error, progress}) => {
     const _files = (event) => {
 
         if(!event){
-            return error('Terjadi Kesalahan')
+            return error('File not found')
         }
         
         if(event){
             if(!event.target.files[0]){
-                return error('File Dibatalkan')
+                return error('File Canceled')
             }
             
             if(event.target.files[0].size > 2048000){
-                return error('Ukuran File maxsimal 2MB')
+                return error('Maximum File Size 2MB')
             }else{
                 error('')
             }
@@ -262,8 +270,7 @@ const Screen = ({loading, error, progress}) => {
         if(search.length > 0){
             _search()
         }else{
-            _read()
-            set_pagination_active(1)
+            _read(pagination_active)
         }
 
     }, [refresh, search])
@@ -274,193 +281,217 @@ const Screen = ({loading, error, progress}) => {
     return (
         <>
 
+            {/* helmet ------------------------------------------- */}
             <Helmet>
-
-                <meta name="description" content={'description'}/>
-                <title>{'title'}</title>
-
+                <title>{'User'}</title>
             </Helmet>
 
-            <div className="_row _center_align">
-                <div className="_column">
-                    <h1 style={{marginBottom: 30}}><span style={{color: '#118ab2'}}>e-</span>Web</h1>
-                </div>
-            </div>
-            <div className="_row _center_align _push_b_d">
-                <ion-icon name="leaf-outline" style={{fontSize: 20}}></ion-icon>
-                <p className="_push_l_m">Kendali penuh untuk mengatur bagian pengaturan web</p>
-            </div>
-
-            <div className="_font_size_20px _push_b_d _push_t_d">Maintenance</div>
-
-            {/* <div class="_row _center_align">
-                <div class="_column">
-
-                </div>
-                <div class="_column">
-                    
-                </div>
-            </div> */}
-
-            {/* <div onClick={() => {
-                if(element === 'overlay'){
-                    set_element(null)
-                }else{
-                    set_element('overlay')
-                }
-            }} className="_btn _cursor_pointer">
-                fmc overlay btn
-            </div>
-
-            {
-                element === 'overlay' ?
-                    <>
-                        <div className="_fmc_overlay">
-                            <div className="_fmc_overlay_navbar">
-                                <div class="_row _center_align">
-                                    <div className="_column">
-                                        <p className="_font_size_18px">Overlay</p>
-                                    </div>
-                                    <div onClick={() => {
-                                        if(element === 'overlay'){
-                                            set_element(null)
-                                        }else{
-                                            set_element('overlay')
-                                        }
-                                    }} className="_push_l_d _btn _cursor_pointer">
-                                        Keluar
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="_fmc_overlay_content">
-
-                            </div>
-                        </div>
-                    </>
-                : null
-            }
-
-            <div className="_relative">
-                <div onClick={() => {
-                    if(element === 'overlay_dropdown'){
-                        set_element(null)
-                    }else{
-                        set_element('overlay_dropdown')
-                    }
-                }} className="_btn _cursor_pointer">
-                    <div className="_row _center_align">
-                        <div className="_column">
-                            fmc overlay dropdown btn
-                        </div>
-                        <div className="_push_l_m _push_t_t">
-                            {
-                                element === 'overlay_dropdown' ?
-                                    <ion-icon name="chevron-up-outline"></ion-icon>
-                                :
-                                    <ion-icon name="chevron-down-outline"></ion-icon>
-                            }
+            {/* header ------------------------------------------- */}
+            <div className="_push_b_d">
+                <div className="_row _center_align">
+                    <div className="_push_r_m">
+                        <div className="_icon_d">
+                            <ion-icon name="search-outline"></ion-icon>
                         </div>
                     </div>
-                </div>
-                {
-                    element === 'overlay_dropdown' ?
-                        // _left or _right
-                        <>
-                            <div className="_fmc_overlay_dropdown _left">
-                                <div onClick={() => {}} className="_item">1. oke</div>
-                                <div onClick={() => {}} className="_item">1. oke</div>
-                                <div onClick={() => {}} className="_item">1. oke</div>
-                                <div onClick={() => {}} className="_item">1. oke</div>
-                            </div>
-                        </>
-                    : null
-                }
-            </div>
-
-            <div className="_relative _push_b_m">
-                <p style={{color: '#888', fontSize: 13}}>
-                    <ion-icon name="ellipse-outline" style={{marginRight: 8, fontSize: 12}}></ion-icon>
-                    Input
-                </p>
-                <div className="_e_input">
-                    <input 
-                        placeholder=""
-                        type={'text'} 
-                        // onChange={e => set_input(e.target.value)}
-                        // value={input}
-                    />
-                </div>
-            </div>
-
-            <div className="_bb-input" style={{paddingBottom: 10, paddingTop: 10}}>
-                                    
-                <input
-                    className="custom-file-input" 
-                    type="file"
-                    name="file"
-                    placeholder=""
-                    onChange={_files}
-                />
-
-            </div>
-
-            <div onClick={() => {
-                _uploads()
-            }} class="_btn _cursor_pointer">
-                Simpan
-            </div>
-
-            <div className="_bb_search" style={{backgroundColor: 'transparent'}}>
-                <div className="_row _center_align">
-                    <ion-icon name="search-outline" style={{fontSize: 20}}></ion-icon>
                     <div className="_column">
-                        <input 
-                            placeholder="Cari File" 
+                        <input
+                            className="_input" 
+                            placeholder="Search" 
                             onChange={e => set_search(e.target.value)}
                             value={search}
                         />
                     </div>
+                    <div className="_push_l_m">
+                        <button
+                            onClick={() => {
+                                if(element === 'insert'){
+                                    set_element(null)
+                                    set_file(null)
+                                    set_name('')
+                                    set_price('')
+                                    set_category('')
+                                }else{
+                                    set_element('insert')
+                                }
+                            }} 
+                            style={{backgroundColor: element === 'insert' ? '#eee' : '#fff'}}
+                            className="_btn"
+                        >
+                            Add
+                        </button>
+                    </div>
                 </div>
             </div>
 
+            {/* insert ------------------------------------------- */}
+            {
+                element === 'insert' ?
+                    <div className="_push_b_d">
+                        <input
+                            className="_input" 
+                            placeholder="Name" 
+                            onChange={e => set_name(e.target.value)}
+                            value={name}
+                        />
+                        <input
+                            className="_input" 
+                            type={'number'}
+                            placeholder="Price" 
+                            onChange={e => set_price(e.target.value)}
+                            value={price}
+                        />
+                        <input
+                            className="_input" 
+                            placeholder="Category" 
+                            onChange={e => set_category(e.target.value)}
+                            value={category}
+                        />
+                        <input
+                            className="_input" 
+                            type="file"
+                            name="file"
+                            placeholder=""
+                            onChange={_files}
+                        />
+                        <div className="_push_t_m">
+                            <button
+                                onClick={() => {
+                                    _request('insert')
+                                }} 
+                                className="_btn">
+                                Insert
+                            </button>
+                        </div>
+                    </div>
+                : null
+            }
+            
+            {/* table -------------------------------------------- */}
             <div className="_overflow_x">
-                <table className="_table">
+                <table>
                     <thead>
-                        <th style={{width: 60}}><ion-icon name="rocket-outline" style={{fontSize: 22}}></ion-icon></th>
-                        <th>Title</th>
-                        <th>Description</th>
-                        <th>Category</th>
-                        <th>
-                            <div className="_right_text">
-                                <ion-icon name="magnet-outline" style={{fontSize: 24}}></ion-icon>
-                            </div>
-                        </th>
+                        <th>Level</th>
+                        <th>Status</th>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Action</th>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td colSpan="5"></td>
-                        </tr>
+                        {
+                            data && data.list.length > 0 ?
+                                data.list.map((item, index) => (
+                                    <>
+                                        <tr key={index}>
+                                            <td>{decode(item.level)}</td>
+                                            <td>{decode(item.status)}</td>
+                                            <td>{decode(item.name)}</td>
+                                            <td>{decode(item.username)}</td>
+                                            <td>{decode(item.password)}</td>
+                                            <td className="_text_overflow">
+                                                <button
+                                                    onClick={() => {
+                                                        set_element(`update_${item.id_product}`)
+                                                        set_name(item.name)
+                                                        set_price(item.price)
+                                                        set_category(item.category)
+                                                    }}
+                                                    style={{backgroundColor: element === `update_${item.id_product}` ? '#eee' : '#fff'}} 
+                                                    className="_btn"
+                                                >
+                                                    Update
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        _request('delete', item.id_product)
+                                                    }} 
+                                                    className="_push_l_m _push_r_m _btn">
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {
+                                            element === `update_${item.id_product}` ?
+                                                <tr>
+                                                    <td>
+                                                        <input
+                                                            className="_input" 
+                                                            type="file"
+                                                            name="file"
+                                                            placeholder=""
+                                                            onChange={_files}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            className="_input" 
+                                                            placeholder="Name" 
+                                                            onChange={e => set_name(e.target.value)}
+                                                            value={decode(name)}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            className="_input" 
+                                                            type={'number'}
+                                                            placeholder="Price" 
+                                                            onChange={e => set_price(e.target.value)}
+                                                            value={decode(price)}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            className="_input" 
+                                                            placeholder="Category" 
+                                                            onChange={e => set_category(e.target.value)}
+                                                            value={decode(category)}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            onClick={() => {
+                                                                _request('update', item.id_product)
+                                                            }} 
+                                                            className="_btn">
+                                                            Save
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            : null
+                                        }
+                                    </>
+                                ))
+                            : 
+                                data &&
+                                <tr>
+                                    <td colSpan="5">
+                                        Data Not Found
+                                    </td>
+                                </tr>
+                        }
                     </tbody>
                 </table>
             </div>
             
+            {/* pagination ---------------------------------------- */}
             <div className="_lily_pad_h_d _push_b_d _push_t_d">
-                <div className="__pagination">
+                <div className="_pagination">
                     {
-                        data&&data.pages.map((item, index) => {
+                        data && data.pages.map((item, index) => {
                             if(data.pages.length > 1){
                                 return (
 
                                     <div 
                                         key={index} 
-                                        className="__item"
+                                        className="_item"
                                         style={{backgroundColor: pagination_active === index + 1 ? '#eee' : '#fff'}}
                                         onClick={() => {
                                             _read(index + 1);
                                             set_pagination_active(index + 1)
                                         }}
                                     >
-                                        <div className="_position_middle">
+                                        <div className="_center_text">
                                             {item}
                                         </div>
                                     </div>
@@ -470,10 +501,7 @@ const Screen = ({loading, error, progress}) => {
                         })
                     }
                 </div>
-            </div> */}
-
-            <div style={{height: 100}}></div>
-
+            </div>
         </>
     );
 

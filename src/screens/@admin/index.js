@@ -184,6 +184,12 @@ const Screen = ({loading, error, progress}) => {
                                         error={(e) => error(e)}
                                         progress={(e) => progress(e)}  
                                     />
+                                : routes === 'user' ?
+                                    <User
+                                        loading={(e) => {loading(e)}}
+                                        error={(e) => error(e)}
+                                        progress={(e) => progress(e)}  
+                                    />
                                 : <div>Not Found Route</div>
                             : <div>Not Found Level</div>
                         : <div>Not Found User</div>

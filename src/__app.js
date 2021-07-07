@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------
 [React]
 -------------------------------------------------------------------*/
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 /*------------------------------------------------------------------
 [End React]
 -------------------------------------------------------------------*/
@@ -23,29 +23,15 @@ import {reactLocalStorage} from 'reactjs-localstorage';
 -------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------
-[API]
--------------------------------------------------------------------*/
-import { API_GET_PUBLIC, API_GET_REQUEST } from './api';
-/*------------------------------------------------------------------
-[End API]
--------------------------------------------------------------------*/
-
-/*------------------------------------------------------------------
 [Screen]
 -------------------------------------------------------------------*/
 import AdminScreen from "./screens/@admin";
 import LoginScreen from "./screens/authentication/login";
 import RegisterScreen from "./screens/authentication/register";
 
-import TestScreen from "./screens/@test";
-
 import NotFoundScreen from "./screens/404";
 /*------------------------------------------------------------------
-[Functions]
--------------------------------------------------------------------*/
-import { random_character } from "./functions";
-/*------------------------------------------------------------------
-[End Functions]
+[End Screen]
 -------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------
@@ -90,7 +76,7 @@ const App = () => {
 
 		setTimeout(() => {
 			set_progress('') 
-		}, 1500)
+		}, 1500);
 
 	}
 	/*--------------------------------------------------------------
@@ -136,8 +122,9 @@ const App = () => {
 				progress > 0 ?
 				
 					<div className="_progressbar">
-						<div class="_loader"></div>
-						<h1 style={{marginBottom: 20}}><span style={{color: '#118ab2'}}>e-</span>Progress</h1>
+						<div className="_push_b_d">
+							<h1>Upload</h1>
+						</div>
 						<div className="_item">
 							<div className="_item_progress" style={{width: `${progress}%`}}>
 								<div className="_percent">{`${progress}%`}</div>
@@ -147,7 +134,7 @@ const App = () => {
 							progress === 100 ?
 								_progress_finish()
 							: 
-								<p className="_push_t_l">Uploading Files . . .</p>
+								<p className="_push_t_d">Uploading Files . . .</p>
 						}
 					</div>
 
@@ -180,15 +167,6 @@ const App = () => {
 							loading={(e) => {set_loading(e)}}
 							error={(e) => set_error(e)}
 							progress={(e) => set_progress(e)}
-						/>
-					</Route>
-					
-					{/* system */}
-					<Route path="/test">
-						<TestScreen 
-							loading={(e) => {set_loading(e)}}
-							error={(e) => set_error(e)}
-							progress={(e) => set_progress(e)} 
 						/>
 					</Route>
 
