@@ -127,7 +127,6 @@ const Screen = ({loading, error, progress}) => {
             , 
             ).then((response) => {
                 if(response.data.result == 'success'){
-                    // console.log(JSON.stringify(response.data.data.list, undefined, 2))
                     set_data(response.data.data)
                     error('')
                 }else if(response.data.error){
@@ -396,10 +395,17 @@ const Screen = ({loading, error, progress}) => {
                                             <td className="_text_overflow">
                                                 <button
                                                     onClick={() => {
-                                                        set_element(`update_${item.id_product}`)
-                                                        set_name(item.name)
-                                                        set_price(item.price)
-                                                        set_category(item.category)
+                                                        if(element === `update_${item.id_product}`){
+                                                            set_element(null)
+                                                            set_name('')
+                                                            set_price('')
+                                                            set_category('')
+                                                        }else{
+                                                            set_element(`update_${item.id_product}`)
+                                                            set_name(item.name)
+                                                            set_price(item.price)
+                                                            set_category(item.category)
+                                                        }   
                                                     }}
                                                     style={{backgroundColor: element === `update_${item.id_product}` ? '#eee' : '#fff'}} 
                                                     className="_btn"

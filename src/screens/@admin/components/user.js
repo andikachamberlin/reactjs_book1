@@ -17,7 +17,7 @@ import {Helmet} from "react-helmet";
 /*------------------------------------------------------------------
 [API]
 -------------------------------------------------------------------*/
-import { API_GET_REQUEST, API_SERVER, API_SCT, API_URL } from '../../../api';
+import { API_GET_REQUEST, API_POST } from '../../../api';
 /*------------------------------------------------------------------
 [End API]
 -------------------------------------------------------------------*/
@@ -25,8 +25,6 @@ import { API_GET_REQUEST, API_SERVER, API_SCT, API_URL } from '../../../api';
 /*------------------------------------------------------------------
 [Module]
 -------------------------------------------------------------------*/
-import axios from 'axios'
-import {reactLocalStorage} from 'reactjs-localstorage';
 import {encode, decode} from 'html-entities'
 /*------------------------------------------------------------------
 [End Module]
@@ -43,33 +41,18 @@ import { random_character } from '../../../functions'
 const Screen = ({loading, error, progress}) => {
     
     /*--------------------------------------------------------------
-    [Storage]
-    ----------------------------------------------------------------*/
-    let STORAGE_TOKEN = reactLocalStorage.get('@token');
-    let STORAGE_USER_STRINGIFY = reactLocalStorage.get('@user');
-
-	let STORAGE_USER;
-
-	if(STORAGE_USER_STRINGIFY){
-		STORAGE_USER = JSON.parse(STORAGE_USER_STRINGIFY)
-	}
-    /*--------------------------------------------------------------
-    [End Storage]
-    ----------------------------------------------------------------*/
-
-    /*--------------------------------------------------------------
     [State]
     ----------------------------------------------------------------*/
     const [refresh, set_refresh] = useState(false);
-    const [file, set_file] = useState(null);
     const [element, set_element] = useState(null);
     const [pagination_active, set_pagination_active] = useState(1);
     const [data, set_data] = useState(null);
     const [search, set_search] = useState('');
 
+    const [level, set_level] = useState('');
     const [name, set_name] = useState('');
-    const [price, set_price] = useState('');
-    const [category, set_category] = useState('');
+    const [username, set_username] = useState('');
+    const [password, set_password] = useState('');
     /*--------------------------------------------------------------
     [End State]
     ----------------------------------------------------------------*/
@@ -127,7 +110,6 @@ const Screen = ({loading, error, progress}) => {
             , 
             ).then((response) => {
                 if(response.data.result == 'success'){
-                    // console.log(JSON.stringify(response.data.data.list, undefined, 2))
                     set_data(response.data.data)
                     error('')
                 }else if(response.data.error){
@@ -148,71 +130,28 @@ const Screen = ({loading, error, progress}) => {
 
     const _request = (action, id) => {
 
-        let action_sync = action;
-
-        if(action_sync == 'insert'){
-            action_sync = 'insert'
-        }else if(action_sync == 'update'){
-            if(file !== null){
-                action_sync = 'update_file'
-            }else{
-                action_sync = 'update_text'
-            }
-        }else if(action_sync == 'delete'){
-            action_sync = 'delete'
-        }else{
-            action_sync = null
-        }
-
-        console.log('action sync : ', action_sync)
-
         if(loading === true){
             return
         }
 
-        loading(true);
+		loading(true);
 
-        var data = new FormData();
-        data.append("sct", API_SCT);
-        data.append("key", STORAGE_USER[0].id_key);
-        data.append("action", action_sync);
-        data.append("id_product", id);
-        data.append("name", name);
-        data.append("price", price);
-        data.append("category", category);
-
-
-        if(file !== null){
-            file.map((item) => (
-                data.append("file", item)
-            ))
-        }
-
-        var config = {
-            method: 'post',
-            url: API_URL + "product/post",
-            headers: { 
-                'Authorization': `Bearer ${STORAGE_TOKEN}`,
-            },
-            data : data,
-            onUploadProgress: progressEvent => {
-                if(file !== null){
-                    console.log('loaded : ', progressEvent.loaded)
-                    console.log('total : ', progressEvent.total)
-                    progress(parseInt(Math.round((progressEvent.loaded/progressEvent.total) * 100)))
-                }
-            }
-        };
-
-        axios(config)
+		API_POST('user/post', {
+            id_user: id,
+            action: action,
+            level: level,
+            name: name,
+			username: username,
+			password: password
+		})
         .then((response) => {
-            console.log('response : ', response.data);
-            if(response.data.result === 'success'){
-                set_file(null)
+            console.log('response : ', response.data)
+			if(response.data.result === 'success'){
                 set_element(null)
+                set_level('')
                 set_name('')
-                set_price('')
-                set_category('')
+                set_username('')
+                set_password('')
                 set_refresh(random_character(16))
                 error(response.data.title)
             }else if(response.data.error){
@@ -220,11 +159,10 @@ const Screen = ({loading, error, progress}) => {
             }
         })
         .catch((e) => {
-            console.log('catch : ', e)
+			console.log('catch : ', e)
             error(e.message)
-        })
-        .finally(() => {
-			loading(false);
+        }).finally(() => {
+			loading(false)
 		})
 
     }
@@ -232,36 +170,6 @@ const Screen = ({loading, error, progress}) => {
     [End API]
     ----------------------------------------------------------------*/
 
-    /*--------------------------------------------------------------
-    [Functions]
-    ----------------------------------------------------------------*/
-    const _files = (event) => {
-
-        if(!event){
-            return error('File not found')
-        }
-        
-        if(event){
-            if(!event.target.files[0]){
-                return error('File Canceled')
-            }
-            
-            if(event.target.files[0].size > 2048000){
-                return error('Maximum File Size 2MB')
-            }else{
-                error('')
-            }
-        }
-
-        let foo = event.target.files[0]; 
-
-        set_file([foo]);
-
-	};
-    /*--------------------------------------------------------------
-    [End Functions]
-    ----------------------------------------------------------------*/
-    
     /*--------------------------------------------------------------
     [useEffect]
     ----------------------------------------------------------------*/
@@ -307,10 +215,10 @@ const Screen = ({loading, error, progress}) => {
                             onClick={() => {
                                 if(element === 'insert'){
                                     set_element(null)
-                                    set_file(null)
+                                    set_level('')
                                     set_name('')
-                                    set_price('')
-                                    set_category('')
+                                    set_username('')
+                                    set_password('')
                                 }else{
                                     set_element('insert')
                                 }
@@ -330,29 +238,28 @@ const Screen = ({loading, error, progress}) => {
                     <div className="_push_b_d">
                         <input
                             className="_input" 
+                            placeholder="Level" 
+                            onChange={e => set_level(e.target.value)}
+                            value={level}
+                        />
+                        <input
+                            className="_input" 
                             placeholder="Name" 
                             onChange={e => set_name(e.target.value)}
                             value={name}
                         />
                         <input
                             className="_input" 
-                            type={'number'}
-                            placeholder="Price" 
-                            onChange={e => set_price(e.target.value)}
-                            value={price}
+                            placeholder="Username" 
+                            onChange={e => set_username(e.target.value)}
+                            value={username}
                         />
                         <input
+                            type={'password'}
                             className="_input" 
-                            placeholder="Category" 
-                            onChange={e => set_category(e.target.value)}
-                            value={category}
-                        />
-                        <input
-                            className="_input" 
-                            type="file"
-                            name="file"
-                            placeholder=""
-                            onChange={_files}
+                            placeholder="Password" 
+                            onChange={e => set_password(e.target.value)}
+                            value={password}
                         />
                         <div className="_push_t_m">
                             <button
@@ -371,8 +278,6 @@ const Screen = ({loading, error, progress}) => {
             <div className="_overflow_x">
                 <table>
                     <thead>
-                        <th>Level</th>
-                        <th>Status</th>
                         <th>Name</th>
                         <th>Username</th>
                         <th>Password</th>
@@ -384,27 +289,47 @@ const Screen = ({loading, error, progress}) => {
                                 data.list.map((item, index) => (
                                     <>
                                         <tr key={index}>
-                                            <td>{decode(item.level)}</td>
-                                            <td>{decode(item.status)}</td>
                                             <td>{decode(item.name)}</td>
                                             <td>{decode(item.username)}</td>
-                                            <td>{decode(item.password)}</td>
+                                            <td>
+                                                <div className="_icon_d">
+                                                    <ion-icon name="key-outline"></ion-icon>
+                                                </div>
+                                            </td>
                                             <td className="_text_overflow">
                                                 <button
                                                     onClick={() => {
-                                                        set_element(`update_${item.id_product}`)
-                                                        set_name(item.name)
-                                                        set_price(item.price)
-                                                        set_category(item.category)
+                                                        if(element === `update_${item.id_user}`){
+                                                            set_element(null)
+                                                            set_name('')
+                                                            set_username('')
+                                                        }else{
+                                                            set_element(`update_${item.id_user}`)
+                                                            set_name(item.name)
+                                                            set_username(item.username)
+                                                        }
                                                     }}
-                                                    style={{backgroundColor: element === `update_${item.id_product}` ? '#eee' : '#fff'}} 
+                                                    style={{backgroundColor: element === `update_${item.id_user}` ? '#eee' : '#fff'}} 
                                                     className="_btn"
                                                 >
                                                     Update
                                                 </button>
                                                 <button
                                                     onClick={() => {
-                                                        _request('delete', item.id_product)
+                                                        if(element === `update_password_${item.id_user}`){
+                                                            set_element(null)
+                                                        }else{
+                                                            set_element(`update_password_${item.id_user}`)
+                                                        }
+                                                    }}
+                                                    style={{backgroundColor: element === `update_password_${item.id_user}` ? '#eee' : '#fff'}} 
+                                                    className="_btn _push_l_m"
+                                                >
+                                                    Update Password
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        _request('delete', item.id_user)
                                                     }} 
                                                     className="_push_l_m _push_r_m _btn">
                                                     Delete
@@ -412,20 +337,11 @@ const Screen = ({loading, error, progress}) => {
                                             </td>
                                         </tr>
                                         {
-                                            element === `update_${item.id_product}` ?
+                                            element === `update_${item.id_user}` ?
                                                 <tr>
                                                     <td>
                                                         <input
-                                                            className="_input" 
-                                                            type="file"
-                                                            name="file"
-                                                            placeholder=""
-                                                            onChange={_files}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        <input
-                                                            className="_input" 
+                                                            className="_input"
                                                             placeholder="Name" 
                                                             onChange={e => set_name(e.target.value)}
                                                             value={decode(name)}
@@ -434,24 +350,43 @@ const Screen = ({loading, error, progress}) => {
                                                     <td>
                                                         <input
                                                             className="_input" 
-                                                            type={'number'}
-                                                            placeholder="Price" 
-                                                            onChange={e => set_price(e.target.value)}
-                                                            value={decode(price)}
+                                                            placeholder="Username" 
+                                                            onChange={e => set_username(e.target.value)}
+                                                            value={decode(username)}
                                                         />
                                                     </td>
                                                     <td>
+
+                                                    </td>
+                                                    <td>
+                                                        <button
+                                                            onClick={() => {
+                                                                _request('update', item.id_user)
+                                                            }} 
+                                                            className="_btn">
+                                                            Save
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            : null
+                                        }
+                                        {
+                                            element === `update_password_${item.id_user}` ?
+                                                <tr>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>
                                                         <input
                                                             className="_input" 
-                                                            placeholder="Category" 
-                                                            onChange={e => set_category(e.target.value)}
-                                                            value={decode(category)}
+                                                            placeholder="Password" 
+                                                            onChange={e => set_password(e.target.value)}
+                                                            value={decode(password)}
                                                         />
                                                     </td>
                                                     <td>
                                                         <button
                                                             onClick={() => {
-                                                                _request('update', item.id_product)
+                                                                _request('update_password', item.id_user)
                                                             }} 
                                                             className="_btn">
                                                             Save
